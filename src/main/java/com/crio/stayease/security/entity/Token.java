@@ -1,22 +1,24 @@
 package com.crio.stayease.security.entity;
 
-import com.crio.stayease.security.entity.Users;
 import com.crio.stayease.security.model.TokenType;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Entity representing an authentication or authorization token.
+ *
+ * <p>This class represents a token issued to users for authentication or authorization purposes.
+ * It includes information about the token itself, its type, and its validity status. The token is
+ * associated with a specific user, and its type can be specified as either BEARER or another type as defined
+ * by the {@link TokenType} enum.</p>
+ *
+ * @see com.crio.stayease.security.model.TokenType
+ * @see com.crio.stayease.security.entity.Users
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,23 +26,44 @@ import lombok.NoArgsConstructor;
 @Entity
 public class Token {
 
-  @Id
-  @GeneratedValue
-  public Integer id;
+    /**
+     * Unique identifier for the token.
+     */
+    @Id
+    @GeneratedValue
+    public Integer id;
 
-  @Column(unique = true)
-  public String token;
+    /**
+     * The actual token string.
+     * Must be unique across all tokens.
+     */
+    @Column(unique = true)
+    public String token;
 
-  @Builder.Default
-  @Enumerated(EnumType.STRING)
-  public TokenType tokenType = TokenType.BEARER;
+    /**
+     * The type of the token, indicating how it should be used.
+     * Default is {@link TokenType#BEARER}.
+     */
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    public TokenType tokenType = TokenType.BEARER;
 
-  public boolean revoked;
+    /**
+     * Indicates whether the token has been revoked and should no longer be used.
+     */
+    public boolean revoked;
 
-  public boolean expired;
+    /**
+     * Indicates whether the token has expired and is no longer valid.
+     */
+    public boolean expired;
 
-  @JsonBackReference
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "users_id")
-  public Users user;
+    /**
+     * The user associated with this token.
+     * The relationship is many-to-one, meaning a user can have multiple tokens.
+     */
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "users_id")
+    public Users user;
 }

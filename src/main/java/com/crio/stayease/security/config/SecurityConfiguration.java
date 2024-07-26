@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,6 +18,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -25,6 +27,14 @@ import java.io.IOException;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+/**
+ * Configuration class for setting up Spring Security for the application.
+ * <p>
+ * This configuration class defines security filters, authorization rules, and exception handling for
+ * the application. It sets up JWT authentication, configures role-based access controls, and manages
+ * session policies.
+ * </p>
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -32,7 +42,8 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @Slf4j
 public class SecurityConfiguration {
 
-    private static final String[] WHITE_LIST_URL = {"/api/v1/auth/**",
+    private static final String[] WHITE_LIST_URL = {
+            "/api/v1/auth/**",
             "/v2/api-docs",
             "/v3/api-docs",
             "/v3/api-docs/**",
@@ -45,24 +56,50 @@ public class SecurityConfiguration {
             "/swagger-ui.html",
             "/api/auth/**"
     };
+
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final DaoAuthenticationProvider authenticationProvider;
     private final LogoutHandler logoutHandler;
+    private final AccessDeniedHandler accessDeniedHandler;
 
+    /**
+     * Configures the HTTP security for the application.
+     * <p>
+     * This method sets up various security aspects including:
+     * <ul>
+     *     <li>Disabling CSRF protection.</li>
+     *     <li>Configuring URL patterns and authorization rules.</li>
+     *     <li>Setting up custom JWT authentication filter.</li>
+     *     <li>Configuring logout behavior and handlers.</li>
+     *     <li>Enabling stateless session management.</li>
+     *     <li>Adding a custom request logging filter before the authentication filter.</li>
+     * </ul>
+     * </p>
+     *
+     * @param http the {@link HttpSecurity} object to configure
+     * @return the configured {@link SecurityFilterChain}
+     * @throws Exception if an error occurs during configuration
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
                         req
-//                                .requestMatchers(WHITE_LIST_URL).permitAll()
-//                                .requestMatchers(HttpMethod.GET, "/hotels/**").permitAll()
-//                                .requestMatchers(HttpMethod.POST, "/hotels/**").hasAuthority(Role.ADMIN.name())
-//                                .requestMatchers(HttpMethod.PUT, "/hotels/**").hasAuthority(Role.ADMIN.name())
-//                                .requestMatchers(HttpMethod.DELETE, "/hotels/**").hasAuthority(Role.ADMIN.name())
-                                .anyRequest()
-                                .authenticated()
+                                .requestMatchers(WHITE_LIST_URL).permitAll()
+                                // Hotel Controller
+                                .requestMatchers(HttpMethod.GET, "/hotels/**").hasAnyAuthority(Role.CUSTOMER.name(), Role.MANAGER.name(), Role.ADMIN.name())
+                                .requestMatchers(HttpMethod.POST, "/hotels").hasAuthority(Role.CUSTOMER.name())
+                                // Authentication Controller
+                                .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/refresh-token", "/api/v1/auth/login").permitAll()
+                                // Booking Controller
+                                .requestMatchers(HttpMethod.PUT, "/bookings/{id}/cancel").hasAnyAuthority(Role.MANAGER.name(), Role.ADMIN.name())
+                                // User Controller
+                                .requestMatchers(HttpMethod.GET, "/users/me").hasAnyAuthority(Role.CUSTOMER.name(), Role.MANAGER.name(), Role.ADMIN.name())
+                                // All other endpoints require ADMIN authority
+                                .anyRequest().hasAuthority(Role.ADMIN.name())
                 )
+                .exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

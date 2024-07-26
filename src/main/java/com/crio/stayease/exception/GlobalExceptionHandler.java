@@ -2,6 +2,7 @@ package com.crio.stayease.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -48,6 +49,19 @@ public class GlobalExceptionHandler {
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getReason());
         return ResponseEntity.status(ex.getStatusCode()).body(error);
+    }
+
+    /**
+     * Handles AccessDeniedException.
+     *
+     * @param ex the AccessDeniedException object
+     * @return a ResponseEntity with an error message map and HTTP status 403 (Forbidden)
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Access Denied: You do not have the necessary permissions to access this resource.");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     /**

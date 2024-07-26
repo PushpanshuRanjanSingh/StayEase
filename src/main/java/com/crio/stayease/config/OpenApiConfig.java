@@ -1,6 +1,5 @@
 package com.crio.stayease.config;
 
-
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -11,6 +10,25 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
 
+/**
+ * Configuration class for setting up OpenAPI (Swagger) documentation for the StayEase application.
+ * <p>
+ * This class provides OpenAPI specifications including general information about the API,
+ * server details, and security requirements. It is used to configure the OpenAPI documentation
+ * which is accessible through Swagger UI.
+ * </p>
+ * <p>
+ * The OpenAPI documentation includes:
+ * <ul>
+ *   <li>API information such as title, description, version, license, and terms of service.</li>
+ *   <li>Server details for local and production environments.</li>
+ *   <li>Security scheme configuration for JWT bearer authentication.</li>
+ * </ul>
+ * </p>
+ *
+ * @see <a href="https://swagger.io/docs/specification/about/">OpenAPI Specification</a>
+ * @see <a href="https://swagger.io/tools/swagger-ui/">Swagger UI</a>
+ */
 @OpenAPIDefinition(
         info = @Info(
                 contact = @Contact(
