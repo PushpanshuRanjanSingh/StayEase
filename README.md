@@ -46,8 +46,8 @@ Develop a RESTFul API service using Spring Boot to manage a hotel booking system
    ```
 3. Build and Run the Application
    ```bash
-   mvn clean install
-   mvn spring-boot:run
+    ./gradlew clean build
+    ./gradlew bootRun
    ```
 4. Access Swagger UI
    Open a web browser and navigate to:
